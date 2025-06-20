@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import disasterRoutes from './disasterRoutes.js';
+import resourceRoutes from './resourceRoutes.js';
 
 const router = Router();
 
@@ -9,6 +10,7 @@ router.get('/', (req, res) => {
 });
 
 router.use('/disasters', disasterRoutes);
+router.use('/resources',resourceRoutes)
 
 
 export default router;

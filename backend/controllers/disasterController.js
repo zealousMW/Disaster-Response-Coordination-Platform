@@ -2,6 +2,7 @@
 import supabase from '../config/supabaseClient.js';
 import { socketServer } from '../config/socketServer.js';
 import { logger } from '../utils/logger.js';
+import { extractAndGeocode } from '../services/locationService.js';
 
 // CREATE a new disaster
 export const createDisaster = async (req, res, next) => {
@@ -24,10 +25,18 @@ export const createDisaster = async (req, res, next) => {
   }];
 
   try {
+    const locationData = await extractAndGeocode(description);
+    let locationName = null;
+    let locationPoint = null;
+    if (locationData) {
+        locationName  = locationData.locationName;
+        // FIX: Use space, not comma, and order is lon lat
+        locationPoint = `POINT(${locationData.lon} ${locationData.lat})`;
+    }
     const { data, error } = await supabase
       .from('disasters')
       // FIX: The object keys must match the column names in your database ('tags').
-      .insert({ title, description, tags, owner_id, audit_trail: auditTrail })
+      .insert({ title, description, tags, owner_id, audit_trail: auditTrail, location_name: locationName, location: locationPoint })
       .select()
       .single();
 

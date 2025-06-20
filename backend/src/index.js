@@ -1,44 +1,24 @@
-// index.js
-const express = require('express');
-const cors = require('cors');
-const { createServer } = require('http');
-const { Server } = require('socket.io');
+import express from 'express';
+import cors from 'cors';
+import { initSocketServer } from '../config/socketServer.js';
+import http from 'http';
+
+import mainRouter from '../routes/index.js';
+import { errorHandler } from '../middleware/errorHandler.js';
+import { logger } from '../utils/logger.js';
 
 const app = express();
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: {
-    origin: "*", // In production, replace with specific origin
-    methods: ["GET", "POST"]
-  }
-});
+const PORT = process.env.PORT || 3000;
+const httpServer = http.createServer(app);
 
-const PORT = 3000;
-
-// Middleware
-app.use(cors());
+initSocketServer(httpServer);
+app.use(cors({origin: '*'})); // Allow all origins for development; restrict in production
 app.use(express.json());
 
-// Health check route
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+app.use('/api', mainRouter);
+app.use(errorHandler);
 
-// Home route
-app.get('/', (req, res) => {
-  res.send('Hello, Express!');
-});
-
-// Socket.IO connection handling
-io.on('connection', (socket) => {
-  console.log('A user connected');
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected');
-  });
-});
-
-// Start the server
 httpServer.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  logger.info(`Server is running on port ${PORT}`);
+  logger.info(`Socket.IO server is listening on port ${PORT}`);
 });

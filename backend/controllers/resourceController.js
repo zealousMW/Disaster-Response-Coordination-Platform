@@ -18,7 +18,7 @@ export const findNearbyResources = async (req, res, next) => {
         return next(error);
     }
     try{
-        const {data, error} = await supabase.rpc('find_resources_near', {
+        const {data, error} = await supabase.rpc('get_nearby_resources2', {
             query_lat: latitude,
             query_lon: longitude,
             radius_meters: radiusMeters

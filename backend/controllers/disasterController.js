@@ -56,10 +56,12 @@ export const createDisaster = async (req, res, next) => {
 export const getAllDisasters = async (req, res, next) => {
   const { tag } = req.query;
   try {
-    let query = supabase.from('disasters').select('*').order('created_at', { ascending: false });
+    let query = supabase
+      .from('disasters_with_coords')
+      .select('*')
+      .order('created_at', { ascending: false });
 
     if (tag) {
-      // FIX: Use .contains() to check if an element exists in a TEXT[] array column.
       query = query.contains('tags', [tag]);
     }
 
@@ -68,13 +70,11 @@ export const getAllDisasters = async (req, res, next) => {
 
     logger.info('Fetched all disasters', { count: data.length, filterTag: tag || 'none' });
     res.status(200).json(data);
-
   } catch (dbError) {
     logger.error('Database error fetching disasters', { error: dbError.message });
     next(dbError);
   }
 };
-
 
 // UPDATE a disaster
 export const updateDisaster = async (req, res, next) => {

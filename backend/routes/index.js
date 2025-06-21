@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import disasterRoutes from './disasterRoutes.js';
 import resourceRoutes from './resourceRoutes.js';
+import reportRoutes from './reportRoutes.js';
 import * as aggregationController from '../controllers/aggregationController.js';
 
 const router = Router();
@@ -12,6 +13,7 @@ router.get('/', (req, res) => {
 
 router.use('/disasters', disasterRoutes);
 router.use('/resources',resourceRoutes)
+router.use('/reports', reportRoutes);
 
 router.get('/disasters/:id/social-media', aggregationController.getSocialMedia);
 router.get('/official-updates', aggregationController.getOfficialUpdates);

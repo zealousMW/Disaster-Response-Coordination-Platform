@@ -59,8 +59,10 @@ export default function CreateDisasterForm({ onSuccess }: CreateDisasterFormProp
     //   return;
     // }
 
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+
     try {
-      const response = await fetch('http://localhost:3001/api/disasters', {
+      const response = await fetch(`${API_URL}/disasters`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

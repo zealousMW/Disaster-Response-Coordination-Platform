@@ -107,12 +107,16 @@ export default function LeafletMap({}: LeafletMapProps) {
   const hasFlownRef = useRef<boolean>(false);
   const defaultPosition: [number, number] = [25, 0]; // Center of the world
 
+  // API URL from environment variable
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+
   // Effect to fetch initial disaster data
   useEffect(() => {
     const fetchDisasters = async () => {
       setIsFetchingDisasters(true);
       try {
-        const response = await fetch('http://localhost:3001/api/disasters');
+        console.log("API_URL:", API_URL); // Debug: log API_URL
+        const response = await fetch(`${API_URL}/disasters`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         setDisasters(await response.json());
       } catch (error) {
@@ -141,7 +145,7 @@ export default function LeafletMap({}: LeafletMapProps) {
     setResources([]);
     const { latitude, longitude } = disaster;
     try {
-        const url = `http://localhost:3001/api/resources/nearby?lat=${latitude}&lon=${longitude}&radius=20000`;
+        const url = `${API_URL}/resources/nearby?lat=${latitude}&lon=${longitude}&radius=20000`;
         const response = await fetch(url);
         if (!response.ok) throw new Error(`Failed to fetch resources. Status: ${response.status}`);
         const data: Resource[] = await response.json();

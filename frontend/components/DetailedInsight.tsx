@@ -17,24 +17,22 @@ export default function DetailedInsight({ disasterId }: DetailedInsightProps) {
   const [socialMediaPosts, setSocialMediaPosts] = useState<SocialMediaPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
   useEffect(() => {
     if (!disasterId) return;
+    setLoading(true);
+    setError(null);
+    Promise.all([
+      fetch(`${API_URL}/reports/${disasterId}`),
+      fetch(`${API_URL}/disasters/${disasterId}/social-media`)
+    ])
+      .then(async ([reportRes, socialRes]) => {
+        if (!reportRes.ok) throw new Error(`Failed to fetch citizen reports`);
+        if (!socialRes.ok) throw new Error(`Failed to fetch social media posts`);
 
-    const fetchDetails = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const [reportsResponse, socialMediaResponse] = await Promise.all([
-          fetch(`http://localhost:3001/api/reports/${disasterId}`),
-          fetch(`http://localhost:3001/api/disasters/${disasterId}/social-media`)
-        ]);
-
-        if (!reportsResponse.ok) throw new Error(`Failed to fetch citizen reports`);
-        if (!socialMediaResponse.ok) throw new Error(`Failed to fetch social media posts`);
-
-        const reportsData: Report[] = await reportsResponse.json();
-        const socialMediaData: SocialMediaPost[] = await socialMediaResponse.json();
+        const reportsData: Report[] = await reportRes.json();
+        const socialMediaData: SocialMediaPost[] = await socialRes.json();
 
         setReports(reportsData);
         setSocialMediaPosts(socialMediaData);
@@ -42,16 +40,15 @@ export default function DetailedInsight({ disasterId }: DetailedInsightProps) {
         if (reportsData.length === 0 && socialMediaData.length === 0) {
           toast.info("No detailed reports or social media activity found.");
         }
-      } catch (err: any) {
+      })
+      .catch(err => {
         setError(err.message || 'An unknown error occurred.');
         toast.error(err.message);
-      } finally {
+      })
+      .finally(() => {
         setLoading(false);
-      }
-    };
-
-    fetchDetails();
-  }, [disasterId]);
+      });
+  }, [disasterId, API_URL]);
 
   // The component now returns its content directly, without any modal wrapper
   return (

@@ -9,6 +9,7 @@ import { Toaster, toast } from "sonner";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import DetailedInsight from './DetailedInsight'; // Assuming DetailedInsight.tsx is in the same folder
 
@@ -60,7 +61,6 @@ interface Resource {
 }
 
 
-// Component to handle map events from inside MapContainer
 function MapController({
   position,
   onMapReady,
@@ -100,24 +100,12 @@ export default function LeafletMap({}: LeafletMapProps) {
 
   // --- 2. STATE TO MANAGE THE DETAILED INSIGHT DIALOG ---
   const [selectedDisasterId, setSelectedDisasterId] = useState<string | number | null>(null);
+  const [showDisasterList, setShowDisasterList] = useState(false);
 
   // Refs and constants
   const mapInstanceRef = useRef<L.Map | null>(null);
   const hasFlownRef = useRef<boolean>(false);
-  const defaultPosition: [number, number] = [34.0522, -118.2437];
-
-  // Effect to get user's current location
-  useEffect(() => {
-    if (navigator.geolocation) {
-        setIsLocating(true);
-        navigator.geolocation.getCurrentPosition(
-            (pos) => { setPosition([pos.coords.latitude, pos.coords.longitude]); setIsLocating(false); },
-            (err) => { setLocationError(err.message); setIsLocating(false); }
-        );
-    } else {
-        setLocationError('Geolocation is not supported by this browser.');
-    }
-  }, []);
+  const defaultPosition: [number, number] = [25, 0]; // Center of the world
 
   // Effect to fetch initial disaster data
   useEffect(() => {
@@ -174,7 +162,34 @@ export default function LeafletMap({}: LeafletMapProps) {
 
   const handleMapReady = (map: L.Map) => { mapInstanceRef.current = map; };
   const handleFlyComplete = () => { setIsAnimating(false); setShouldFlyTo(false); };
-  const handleGoToLocation = () => { if (position) mapInstanceRef.current?.flyTo(position, 16); };
+  const handleGoToLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by this browser.');
+      toast.error('Geolocation is not supported by this browser.');
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setPosition([pos.coords.latitude, pos.coords.longitude]);
+        setIsLocating(false);
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.flyTo([pos.coords.latitude, pos.coords.longitude], 16);
+        }
+      },
+      (err) => {
+        setLocationError(err.message);
+        setIsLocating(false);
+        toast.error('Failed to get your location.');
+      }
+    );
+  };
+  const handleDisasterListItemClick = (disaster: Disaster) => {
+    setShowDisasterList(false);
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.flyTo([disaster.latitude, disaster.longitude], 16);
+    }
+  };
 
   // --- 3. HANDLER TO CONTROL DIALOG OPEN/CLOSE STATE ---
   const handleInsightDialogClose = (isOpen: boolean) => {
@@ -187,8 +202,8 @@ export default function LeafletMap({}: LeafletMapProps) {
     <div className="relative w-full overflow-hidden rounded-xl shadow-2xl" style={{ height: "80vh" }}>
       <Toaster position="top-center" richColors />
       <MapContainer
-        center={position || defaultPosition}
-        zoom={position ? 16 : 8}
+        center={defaultPosition}
+        zoom={3}
         style={{ height: "100%", width: "100%" }}
         className="z-10"
       >
@@ -250,6 +265,13 @@ export default function LeafletMap({}: LeafletMapProps) {
       </div>
       
       {/* Other UI elements */}
+      {/* Button to open disaster list */}
+      <button
+        onClick={() => setShowDisasterList(true)}
+        className="absolute bottom-24 right-6 z-[1000] bg-white text-blue-700 border border-blue-300 p-4 rounded-full shadow-lg hover:bg-blue-50 transition-transform font-semibold flex items-center gap-2"
+      >
+        <span className="text-lg">📋</span> Show All Disasters
+      </button>
       <button onClick={handleGoToLocation} className="absolute bottom-6 right-6 z-[1000] bg-red-500 text-white p-4 rounded-full shadow-lg hover:scale-105 transition-transform">
         <LocateFixed/>
       </button>
@@ -258,6 +280,35 @@ export default function LeafletMap({}: LeafletMapProps) {
       <Dialog open={!!selectedDisasterId} onOpenChange={handleInsightDialogClose}>
         <DialogContent className="max-w-4xl sm:max-w-5xl md:max-w-6xl">
             {selectedDisasterId && <DetailedInsight disasterId={selectedDisasterId} />}
+        </DialogContent>
+      </Dialog>
+
+      {/* Disaster List Dialog */}
+      <Dialog open={showDisasterList} onOpenChange={setShowDisasterList}>
+        <DialogContent className="max-w-lg">
+          <DialogTitle>All Disasters</DialogTitle>
+          <div className="max-h-96 overflow-y-auto space-y-3">
+            {disasters.length === 0 ? (
+              <p className="text-gray-500">No disasters found.</p>
+            ) : (
+              disasters.map((disaster) => (
+                <div
+                  key={disaster.id}
+                  className="p-4 bg-blue-50 rounded-lg shadow hover:bg-blue-100 cursor-pointer transition-colors border border-blue-200"
+                  onClick={() => handleDisasterListItemClick(disaster)}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">🚨</span>
+                    <div>
+                      <h3 className="font-semibold text-lg text-blue-800">{disaster.title}</h3>
+                      <p className="text-sm text-gray-700">{disaster.description}</p>
+                      <p className="text-xs text-gray-500 mt-1">Tags: {disaster.tags.join(', ')}</p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

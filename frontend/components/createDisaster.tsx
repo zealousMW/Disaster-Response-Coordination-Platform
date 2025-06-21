@@ -95,8 +95,9 @@ export default function CreateDisasterForm({ onSuccess }: CreateDisasterFormProp
       // Call the onSuccess callback if provided
       onSuccess?.();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Submission Error:", error);
+      // @ts-expect-error: error may not have a message property
       toast.error(error.message || "Failed to submit the report.");
     } finally {
       setIsLoading(false);

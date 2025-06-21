@@ -14,7 +14,7 @@ import {
 import DetailedInsight from './DetailedInsight'; // Assuming DetailedInsight.tsx is in the same folder
 
 // Fix for default markers in react-leaflet
-delete (L.Icon.Default.prototype as unknown as { [key: string]: unknown })._getIconUrl;
+delete ((L.Icon.Default.prototype as unknown) as { [key: string]: unknown })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -84,14 +84,17 @@ function MapController({
   return null;
 }
 
-interface LeafletMapProps {}
+// Replace empty interface with type alias to avoid lint error
+// type LeafletMapProps = object;
+type LeafletMapProps = object;
 
 export default function LeafletMap({}: LeafletMapProps) {
   // State for user location, disasters, and UI
   const [position, setPosition] = useState<[number, number] | null>(null);
-  const [locationError, setLocationError] = useState<string | null>(null);
+  // Removed unused locationError and isAnimating
+  // const [locationError, setLocationError] = useState<string | null>(null);
+  // const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [isLocating, setIsLocating] = useState<boolean>(false);
-  const [isAnimating, setIsAnimating] = useState<boolean>(false);
   const [shouldFlyTo, setShouldFlyTo] = useState<boolean>(false);
   const [disasters, setDisasters] = useState<Disaster[]>([]);
   const [isFetchingDisasters, setIsFetchingDisasters] = useState<boolean>(true);
@@ -127,12 +130,11 @@ export default function LeafletMap({}: LeafletMapProps) {
       }
     };
     fetchDisasters();
-  }, []);
+  }, [API_URL]); // Add API_URL to dependency array
 
   // Effect to fly to user location on initial load
   useEffect(() => {
     if (mapInstanceRef.current && position && !hasFlownRef.current) {
-      setIsAnimating(true);
       setShouldFlyTo(true);
       hasFlownRef.current = true;
     }
@@ -165,10 +167,10 @@ export default function LeafletMap({}: LeafletMapProps) {
   };
 
   const handleMapReady = (map: L.Map) => { mapInstanceRef.current = map; };
-  const handleFlyComplete = () => { setIsAnimating(false); setShouldFlyTo(false); };
+  const handleFlyComplete = () => { setShouldFlyTo(false); };
   const handleGoToLocation = () => {
     if (!navigator.geolocation) {
-      setLocationError('Geolocation is not supported by this browser.');
+      // setLocationError('Geolocation is not supported by this browser.');
       toast.error('Geolocation is not supported by this browser.');
       return;
     }
@@ -181,8 +183,8 @@ export default function LeafletMap({}: LeafletMapProps) {
           mapInstanceRef.current.flyTo([pos.coords.latitude, pos.coords.longitude], 16);
         }
       },
-      (err) => {
-        setLocationError(err.message);
+      () => {
+        // setLocationError(err.message);
         setIsLocating(false);
         toast.error('Failed to get your location.');
       }

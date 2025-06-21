@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import disasterRoutes from './disasterRoutes.js';
 import resourceRoutes from './resourceRoutes.js';
+import * as aggregationController from '../controllers/aggregationController.js';
 
 const router = Router();
 
@@ -11,6 +12,10 @@ router.get('/', (req, res) => {
 
 router.use('/disasters', disasterRoutes);
 router.use('/resources',resourceRoutes)
+
+router.get('/disasters/:id/social-media', aggregationController.getSocialMedia);
+router.get('/official-updates', aggregationController.getOfficialUpdates);
+router.post('/verify-image', aggregationController.verifyImage);
 
 
 export default router;

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"; // Import Dialog parts for structure
-import Image from 'next/image';
 
 // --- (Interfaces for Report and SocialMediaPost remain the same) ---
 interface Report { id: number; created_at: string; user_id: string; content: string; image_url?: string; verification_status?: string; }
@@ -84,7 +83,14 @@ export default function DetailedInsight({ disasterId }: DetailedInsightProps) {
                         <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-green-100 text-green-700 rounded-full border border-green-300">Verified</span>
                       )}
                     </div>
-                    {report.image_url && <div className="mt-2 rounded-lg max-h-40 relative w-full h-40"><Image src={report.image_url} alt="Report" layout="fill" objectFit="contain" className="rounded-lg" /></div>}
+                    {report.image_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img 
+                        src={report.image_url} 
+                        alt="Report" 
+                        className="mt-2 rounded-lg max-h-40"
+                      />
+                    )}
                     <p className="text-xs text-gray-500 mt-2">By: {report.user_id} on {new Date(report.created_at).toLocaleDateString()}</p>
                   </div>
                 )) : <p className="text-gray-500">No citizen reports available.</p>}
@@ -98,7 +104,14 @@ export default function DetailedInsight({ disasterId }: DetailedInsightProps) {
                 {socialMediaPosts.length > 0 ? socialMediaPosts.map(post => (
                     <a href={post.url} target="_blank" rel="noopener noreferrer" key={post.id} className="block bg-white p-3 rounded-md shadow-sm mb-3 hover:bg-blue-50 transition-colors">
                         <div className="flex items-start space-x-3">
-                            {post.userAvatar && <div className="w-10 h-10 relative"><Image src={post.userAvatar} className="rounded-full" alt="avatar" layout="fill" objectFit="cover" /></div>}
+                            {post.userAvatar && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img 
+                                src={post.userAvatar} 
+                                className="w-10 h-10 rounded-full" 
+                                alt="avatar"
+                              />
+                            )}
                             <div className="flex-1">
                                 <p className="font-semibold text-sm">{post.userDisplayName} <span className="font-normal text-gray-500">@{post.user}</span></p>
                                 <p className="text-gray-800 my-1">{post.post}</p>
